@@ -1,0 +1,548 @@
+{
+    "nazeeruu6205@gmail.com": [
+        {
+            "date": "2025-08-13",
+            "body_part": "Chest",
+            "exercise": "Bench Press",
+            "equipment": "Dumbbell",
+            "health_condition": "Healthy",
+            "sets": [
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                }
+            ],
+            "target_reps": {
+                "set_3": 8,
+                "set_4": 8
+            },
+            "recommendation": {
+                "recommendation": "model_predicted",
+                "message": "AI-generated recommendation",
+                "suggested_weights": [
+                    {
+                        "Set": 1,
+                        "Weight (kg)": 10.0,
+                        "Reps": 8,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 2,
+                        "Weight (kg)": 12.0,
+                        "Reps": 8,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 3,
+                        "Weight (kg)": 14.0,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 4,
+                        "Weight (kg)": 16.0,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    }
+                ],
+                "hit_targets": {
+                    "set_3": true,
+                    "set_4": true
+                },
+                "health_warning": false
+            }
+        },
+        {
+            "date": "2025-08-13",
+            "body_part": "Chest",
+            "exercise": "Bench Press",
+            "equipment": "Barbell",
+            "health_condition": "Healthy",
+            "sets": [
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                }
+            ],
+            "target_reps": {
+                "set_3": 8,
+                "set_4": 8
+            },
+            "recommendation": {
+                "recommendation": "model_predicted",
+                "message": "AI-generated recommendation",
+                "suggested_weights": [
+                    {
+                        "Set": 1,
+                        "Weight (kg)": 10.0,
+                        "Reps": 8,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 2,
+                        "Weight (kg)": 12.0,
+                        "Reps": 8,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 3,
+                        "Weight (kg)": 14.0,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 4,
+                        "Weight (kg)": 16.0,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    }
+                ],
+                "hit_targets": {
+                    "set_3": true,
+                    "set_4": true
+                },
+                "health_warning": false
+            }
+        },
+        {
+            "date": "2025-08-13",
+            "body_part": "Back",
+            "exercise": "Bent-over Row",
+            "equipment": "Dumbbell",
+            "health_condition": "Healthy",
+            "sets": [
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                }
+            ],
+            "target_reps": {
+                "set_3": 8,
+                "set_4": 8
+            },
+            "recommendation": {
+                "recommendation": "model_predicted",
+                "message": "AI-generated recommendation",
+                "suggested_weights": [
+                    {
+                        "Set": 1,
+                        "Weight (kg)": 10.0,
+                        "Reps": 8,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 2,
+                        "Weight (kg)": 12.0,
+                        "Reps": 8,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 3,
+                        "Weight (kg)": 14.0,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 4,
+                        "Weight (kg)": 16.0,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    }
+                ],
+                "hit_targets": {
+                    "set_3": true,
+                    "set_4": true
+                },
+                "health_warning": false
+            }
+        },
+        {
+            "date": "2025-08-13",
+            "body_part": "Chest",
+            "exercise": "Bench Press",
+            "equipment": "Dumbbell",
+            "health_condition": "Healthy",
+            "sets": [
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                },
+                {
+                    "weight": 10.0,
+                    "reps": 8
+                }
+            ],
+            "target_reps": {
+                "set_3": 8,
+                "set_4": 8
+            },
+            "recommendation": {
+                "recommendation": "model_predicted",
+                "message": "AI-generated recommendation",
+                "suggested_weights": [
+                    {
+                        "Set": 1,
+                        "Weight (kg)": 10.0,
+                        "Reps": 8,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 2,
+                        "Weight (kg)": 12.0,
+                        "Reps": 8,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 3,
+                        "Weight (kg)": 14.0,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 4,
+                        "Weight (kg)": 16.0,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    }
+                ],
+                "hit_targets": {
+                    "set_3": true,
+                    "set_4": true
+                },
+                "health_warning": false
+            }
+        },
+        {
+            "date": "2025-08-13",
+            "body_part": "Chest",
+            "exercise": "Bench Press",
+            "equipment": "Dumbbell",
+            "health_condition": "Healthy",
+            "sets": [
+                {
+                    "weight": 10.0,
+                    "reps": 15
+                },
+                {
+                    "weight": 15.0,
+                    "reps": 12
+                },
+                {
+                    "weight": 20.0,
+                    "reps": 10
+                },
+                {
+                    "weight": 22.0,
+                    "reps": 8
+                }
+            ],
+            "target_reps": {
+                "set_3": 10,
+                "set_4": 8
+            },
+            "recommendation": {
+                "recommendation": "model_predicted",
+                "message": "AI-generated recommendation",
+                "suggested_weights": [
+                    {
+                        "Set": 1,
+                        "Weight (kg)": 11.6,
+                        "Reps": 15,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 2,
+                        "Weight (kg)": 13.6,
+                        "Reps": 12,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 3,
+                        "Weight (kg)": 15.6,
+                        "Reps": 10,
+                        "Target Reps": 10,
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 4,
+                        "Weight (kg)": 17.6,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    }
+                ],
+                "hit_targets": {
+                    "set_3": true,
+                    "set_4": true
+                },
+                "health_warning": false
+            }
+        },
+        {
+            "date": "2025-08-13",
+            "body_part": "Chest",
+            "exercise": "Bench Press",
+            "equipment": "Dumbbell",
+            "health_condition": "Healthy",
+            "sets": [
+                {
+                    "weight": 10.0,
+                    "reps": 15
+                },
+                {
+                    "weight": 15.0,
+                    "reps": 12
+                },
+                {
+                    "weight": 20.0,
+                    "reps": 10
+                },
+                {
+                    "weight": 22.0,
+                    "reps": 8
+                }
+            ],
+            "target_reps": {
+                "set_3": 10,
+                "set_4": 8
+            },
+            "recommendation": {
+                "recommendation": "model_predicted",
+                "message": "AI-generated recommendation",
+                "suggested_weights": [
+                    {
+                        "Set": 1,
+                        "Weight (kg)": 11.6,
+                        "Reps": 15,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 2,
+                        "Weight (kg)": 13.6,
+                        "Reps": 12,
+                        "Target Reps": "-",
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 3,
+                        "Weight (kg)": 15.6,
+                        "Reps": 10,
+                        "Target Reps": 10,
+                        "Action": "Predicted"
+                    },
+                    {
+                        "Set": 4,
+                        "Weight (kg)": 17.6,
+                        "Reps": 8,
+                        "Target Reps": 8,
+                        "Action": "Predicted"
+                    }
+                ],
+                "hit_targets": {
+                    "set_3": true,
+                    "set_4": true
+                },
+                "health_warning": false
+            }
+        },
+        {
+            "date": "2025-08-13",
+            "body_part": "Chest",
+            "exercise": "Incline Press",
+            "equipment": "Dumbbell",
+            "health_condition": "Healthy",
+            "sets": [
+                {
+                    "weight": 10.0,
+                    "reps": 15
+                },
+                {
+                    "weight": 15.0,
+                    "reps": 12
+                },
+                {
+                    "weight": 20.0,
+                    "reps": 10
+                },
+                {
+                    "weight": 25.0,
+                    "reps": 8
+                }
+            ],
+            "target_reps": {
+                "set_3": 10,
+                "set_4": 9
+            },
+            "recommendation": {
+                "recommendation": "maintain",
+                "message": "Maintain current weights",
+                "suggested_weights": [
+                    {
+                        "Set": 1,
+                        "Weight (kg)": 10.0,
+                        "Reps": 15,
+                        "Target Reps": "-",
+                        "Action": "Maintain"
+                    },
+                    {
+                        "Set": 2,
+                        "Weight (kg)": 15.0,
+                        "Reps": 12,
+                        "Target Reps": "-",
+                        "Action": "Maintain"
+                    },
+                    {
+                        "Set": 3,
+                        "Weight (kg)": 20.0,
+                        "Reps": 10,
+                        "Target Reps": 10,
+                        "Action": "Maintain"
+                    },
+                    {
+                        "Set": 4,
+                        "Weight (kg)": 25.0,
+                        "Reps": 8,
+                        "Target Reps": 9,
+                        "Action": "Maintain"
+                    }
+                ],
+                "hit_targets": {
+                    "set_3": true,
+                    "set_4": false
+                },
+                "health_warning": false
+            }
+        },
+        {
+            "date": "2025-08-13",
+            "body_part": "Chest",
+            "exercise": "Incline Press",
+            "equipment": "Dumbbell",
+            "health_condition": "Healthy",
+            "sets": [
+                {
+                    "weight": 10.0,
+                    "reps": 15
+                },
+                {
+                    "weight": 15.0,
+                    "reps": 12
+                },
+                {
+                    "weight": 20.0,
+                    "reps": 10
+                },
+                {
+                    "weight": 25.0,
+                    "reps": 10
+                }
+            ],
+            "target_reps": {
+                "set_3": 10,
+                "set_4": 9
+            },
+            "recommendation": {
+                "recommendation": "increase",
+                "message": "Increased by 5.0kg for Chest",
+                "suggested_weights": [
+                    {
+                        "Set": 1,
+                        "Weight (kg)": 10.0,
+                        "Reps": 15,
+                        "Target Reps": "-",
+                        "Action": "Maintain"
+                    },
+                    {
+                        "Set": 2,
+                        "Weight (kg)": 15.0,
+                        "Reps": 12,
+                        "Target Reps": "-",
+                        "Action": "Maintain"
+                    },
+                    {
+                        "Set": 3,
+                        "Weight (kg)": 25.0,
+                        "Reps": 10,
+                        "Target Reps": 10,
+                        "Action": "Increase by 5.0kg"
+                    },
+                    {
+                        "Set": 4,
+                        "Weight (kg)": 30.0,
+                        "Reps": 10,
+                        "Target Reps": 9,
+                        "Action": "Increase by 5.0kg"
+                    }
+                ],
+                "hit_targets": {
+                    "set_3": true,
+                    "set_4": true
+                },
+                "health_warning": false
+            }
+        }
+    ]
+}
