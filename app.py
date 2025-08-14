@@ -241,7 +241,8 @@ def rule_based_recommendation(
         sets: List[Dict[str, Any]],
         target_reps: Dict[str, int],
         body_part: str,
-        health_condition: str
+        health_condition: str,
+        workout_date: Dict[str, int] = None
 ) -> Dict[str, Any]:
     s3_reps = int(sets[2].get("reps", 0))
     s4_reps = int(sets[3].get("reps", 0))
@@ -251,6 +252,17 @@ def rule_based_recommendation(
     hit4 = (t4 > 0 and s4_reps >= t4)
     is_healthy = health_condition.lower() == "healthy"
 
+    # Use date information for enhanced recommendations (if available)
+    date_info = ""
+    if workout_date:
+        month = workout_date.get("month", 1)
+        day = workout_date.get("day", 1)
+        hour = workout_date.get("hour", 12)
+
+        # Time-based adjustments (optional logic)
+        time_of_day = "morning" if hour < 12 else "afternoon" if hour < 18 else "evening"
+        date_info = f" (Workout time: {time_of_day}, Month: {month}, Day: {day})"
+
     if hit3 and hit4 and is_healthy:
         inc = 5.0 if body_part.lower() in ["chest", "back", "legs"] else 2.5
         suggested = []
@@ -259,32 +271,33 @@ def rule_based_recommendation(
             action = f"Increase by {inc}kg" if i >= 2 else "Maintain"
             suggested.append({"Set": i + 1, "Weight (kg)": new_w, "Reps": int(s["reps"]),
                               "Target Reps": (t3 if i == 2 else (t4 if i == 3 else "-")), "Action": action})
-        return {"recommendation": "increase", "message": f"Increased by {inc}kg for {body_part}",
+        return {"recommendation": "increase", "message": f"Increased by {inc}kg for {body_part}{date_info}",
                 "suggested_weights": suggested, "hit_targets": {"set_3": hit3, "set_4": hit4},
-                "health_warning": False}
+                "health_warning": False, "workout_date": workout_date}
     else:
         suggested = []
         for i, s in enumerate(sets):
             suggested.append({"Set": i + 1, "Weight (kg)": float(s["weight"]), "Reps": int(s["reps"]),
                               "Target Reps": (t3 if i == 2 else (t4 if i == 3 else "-")),
                               "Action": "Maintain" if is_healthy else "Rest"})
-        return {"recommendation": "maintain", "message": "Maintain current weights",
+        return {"recommendation": "maintain", "message": f"Maintain current weights{date_info}",
                 "suggested_weights": suggested, "hit_targets": {"set_3": hit3, "set_4": hit4},
-                "health_warning": not is_healthy}
+                "health_warning": not is_healthy, "workout_date": workout_date}
 
 
-def get_recommendation(sets, target_reps, body_part, exercise_name, equipment_type, health_condition):
+def get_recommendation(sets, target_reps, body_part, exercise_name, equipment_type, health_condition,
+                       workout_date=None):
     if exercise_name not in EXERCISES_BY_BODY_PART.get(body_part, []):
         st.error(f"Invalid exercise '{exercise_name}' for selected body part '{body_part}'!")
         st.info(f"Available exercises for {body_part}: {', '.join(EXERCISES_BY_BODY_PART.get(body_part, []))}")
-        return rule_based_recommendation(sets, target_reps, body_part, health_condition)
+        return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
     if model is None:
-        return rule_based_recommendation(sets, target_reps, body_part, health_condition)
+        return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
     try:
-        return rule_based_recommendation(sets, target_reps, body_part, health_condition)
+        return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
     except Exception as e:
         st.warning(f"Model failed: {str(e)}")
-        return rule_based_recommendation(sets, target_reps, body_part, health_condition)
+        return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
 
 
 # ====================================================================
@@ -388,13 +401,24 @@ def show_recommendation_page():
 
         if submit_button:
             with st.spinner("Analyzing..."):
+                # Get current date/time information
+                current_time = datetime.now()
+                workout_date = {
+                    "month": current_time.month,
+                    "day": current_time.day,
+                    "year": current_time.year,
+                    "hour": current_time.hour,
+                    "minute": current_time.minute
+                }
+
                 recommendation = get_recommendation(
                     sets=sets,
                     target_reps=target_reps,
                     body_part=selected_body_part,
                     exercise_name=selected_exercise,
                     equipment_type=equipment,
-                    health_condition=health
+                    health_condition=health,
+                    workout_date=workout_date  # Pass date info to recommendation
                 )
                 st.success(recommendation["message"])
                 st.dataframe(pd.DataFrame(recommendation["suggested_weights"]), hide_index=True)
@@ -402,7 +426,9 @@ def show_recommendation_page():
                     st.warning("Consider consulting a doctor before increasing intensity")
 
                 workout_data = {
-                    "date": datetime.now().strftime("%Y-%m-%d"),
+                    "date": current_time.strftime("%Y-%m-%d"),
+                    "time": current_time.strftime("%H:%M:%S"),
+                    "datetime_info": workout_date,
                     "body_part": selected_body_part,
                     "exercise": selected_exercise,
                     "equipment": equipment,
@@ -423,9 +449,17 @@ def show_history_page():
         return
     history.reverse()
     for workout in history:
-        with st.expander(f"{workout['date']} - {workout['body_part']} - {workout['exercise']}"):
+        with st.expander(
+                f"{workout['date']} {workout.get('time', '')} - {workout['body_part']} - {workout['exercise']}"):
             st.write(f"**Equipment:** {workout['equipment']}")
             st.write(f"**Health Status:** {workout['health_condition']}")
+
+            # Show date/time information if available
+            if 'datetime_info' in workout:
+                date_info = workout['datetime_info']
+                st.write(
+                    f"**Workout Details:** Month {date_info['month']}, Day {date_info['day']}, {date_info['year']} at {date_info['hour']:02d}:{date_info['minute']:02d}")
+
             st.subheader("Sets Performance")
             st.dataframe(pd.DataFrame(workout['sets']), hide_index=True)
             st.subheader("Recommendation")
