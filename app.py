@@ -394,7 +394,17 @@ def prepare_model_input(sets, target_reps, body_part, exercise_name, equipment_t
 def format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_name, workout_date):
     """
     Format ML model prediction into recommendation format
+    Enhanced to respect target-hitting logic
     """
+    # Calculate hit targets first
+    s3_reps = int(sets[2].get("reps", 0)) if len(sets) > 2 else 0
+    s4_reps = int(sets[3].get("reps", 0)) if len(sets) > 3 else 0
+    t3 = int(target_reps.get("set_3", 0))
+    t4 = int(target_reps.get("set_4", 0))
+
+    hit3 = (t3 > 0 and s3_reps >= t3)
+    hit4 = (t4 > 0 and s4_reps >= t4)
+
     # Extract prediction value safely
     try:
         if hasattr(prediction, 'shape') and len(prediction.shape) > 0:
@@ -404,25 +414,33 @@ def format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_
     except (IndexError, TypeError):
         predicted_value = 0.5  # Default neutral value
 
-    # Interpret the prediction (adjust based on your model's output)
-    if predicted_value > 0.6:  # Threshold for weight increase
+    # ENHANCED LOGIC: Combine ML prediction with target-hitting logic
+    # If both targets are hit, strongly favor increase regardless of ML prediction
+    if hit3 and hit4:
+        # Override ML prediction if targets are hit
         inc = 5.0 if body_part.lower() in ["chest", "back", "legs"] else 2.5
         recommendation_type = "increase"
-        message = f"🤖 ML Model recommends: Increase by {inc}kg for {body_part}"
+        message = f"🎯 Targets Hit! ML Model + Logic: Increase by {inc}kg for {body_part}"
+    elif predicted_value > 0.6:  # High ML confidence for increase
+        inc = 5.0 if body_part.lower() in ["chest", "back", "legs"] else 2.5
+        recommendation_type = "increase"
+        message = f"🤖 ML Model (High Confidence): Increase by {inc}kg for {body_part}"
+    elif (hit3 or hit4) and predicted_value >= 0.4:  # At least one target hit + moderate ML confidence
+        inc = 2.5  # Conservative increase
+        recommendation_type = "increase"
+        message = f"🎯 Partial Target Hit + ML: Increase by {inc}kg for {body_part}"
     else:
         inc = 0
         recommendation_type = "maintain"
         message = f"🤖 ML Model recommends: Maintain current weights for {body_part}"
 
-    # Create suggested weights based on prediction
+    # Create suggested weights based on recommendation
     suggested = []
-    t3 = int(target_reps.get("set_3", 0))
-    t4 = int(target_reps.get("set_4", 0))
 
     for i, s in enumerate(sets):
         if recommendation_type == "increase" and i >= 2:
             new_w = round(float(s["weight"]) + inc, 1)
-            action = f"Increase by {inc}kg (ML)"
+            action = f"Increase by {inc}kg (ML+Logic)"
         else:
             new_w = float(s["weight"])
             action = "Maintain (ML)"
@@ -441,24 +459,21 @@ def format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_
     if workout_date:
         hour = workout_date.get("hour", 12)
         time_of_day = "morning" if hour < 12 else "afternoon" if hour < 18 else "evening"
-        date_info = f" (Confidence: {predicted_value:.2f}, Time: {time_of_day})"
-
-    # Calculate hit targets
-    s3_reps = int(sets[2].get("reps", 0)) if len(sets) > 2 else 0
-    s4_reps = int(sets[3].get("reps", 0)) if len(sets) > 3 else 0
+        date_info = f" (ML Confidence: {predicted_value:.2f}, Time: {time_of_day})"
 
     return {
         "recommendation": recommendation_type,
         "message": message + date_info,
         "suggested_weights": suggested,
         "hit_targets": {
-            "set_3": s3_reps >= t3 if t3 > 0 else False,
-            "set_4": s4_reps >= t4 if t4 > 0 else False
+            "set_3": hit3,
+            "set_4": hit4
         },
         "health_warning": False,
         "workout_date": workout_date,
         "ml_prediction": True,
-        "prediction_value": predicted_value
+        "prediction_value": predicted_value,
+        "targets_hit": hit3 and hit4  # Added this for clarity
     }
 
 
@@ -469,18 +484,35 @@ def get_recommendation(sets, target_reps, body_part, exercise_name, equipment_ty
         st.info(f"Available exercises for {body_part}: {', '.join(EXERCISES_BY_BODY_PART.get(body_part, []))}")
         return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
 
+    # Always calculate rule-based recommendation as backup
+    rule_based_rec = rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
+
     # Use ML model if available
     if model is not None:
         try:
             st.info("🤖 Using your trained ML model for predictions!")
-            return make_ml_prediction(sets, target_reps, body_part, exercise_name, equipment_type, health_condition,
-                                      workout_date)
+            ml_rec = make_ml_prediction(sets, target_reps, body_part, exercise_name, equipment_type, health_condition,
+                                        workout_date)
+
+            # If rule-based says increase but ML says maintain, and targets are hit, trust rule-based
+            if (rule_based_rec["recommendation"] == "increase" and
+                    ml_rec["recommendation"] == "maintain" and
+                    rule_based_rec["hit_targets"]["set_3"] and
+                    rule_based_rec["hit_targets"]["set_4"]):
+                st.info("🎯 Overriding ML recommendation because targets were hit!")
+                # Use rule-based but with ML formatting
+                ml_rec["recommendation"] = "increase"
+                ml_rec["message"] = "🎯 Targets Hit! Overriding ML: " + rule_based_rec["message"]
+                ml_rec["suggested_weights"] = rule_based_rec["suggested_weights"]
+
+            return ml_rec
+
         except Exception as e:
             st.warning(f"ML model failed, falling back to rule-based: {str(e)}")
-            return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
+            return rule_based_rec
     else:
         st.info("📋 Using rule-based recommendations (model not loaded)")
-        return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
+        return rule_based_rec
 
 
 # ====================================================================
