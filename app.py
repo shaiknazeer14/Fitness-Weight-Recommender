@@ -307,10 +307,13 @@ def make_ml_prediction(sets, target_reps, body_part, exercise_name, equipment_ty
                                          workout_date)
 
         # Make prediction using your trained model
-        if model_scaler and cols_to_scale:
+        if model_scaler is not None and cols_to_scale:
             # Scale the specified columns
             input_scaled = input_data.copy()
-            input_scaled[cols_to_scale] = model_scaler.transform(input_data[cols_to_scale])
+            # Only scale columns that exist in both the data and cols_to_scale
+            cols_to_scale_filtered = [col for col in cols_to_scale if col in input_data.columns]
+            if cols_to_scale_filtered:
+                input_scaled[cols_to_scale_filtered] = model_scaler.transform(input_data[cols_to_scale_filtered])
             prediction = model.predict(input_scaled)
         else:
             prediction = model.predict(input_data)
@@ -392,9 +395,14 @@ def format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_
     """
     Format ML model prediction into recommendation format
     """
-    # Your model's prediction interpretation logic here
-    # This depends on what your model was trained to predict
-    predicted_value = prediction[0] if hasattr(prediction, '__getitem__') else prediction
+    # Extract prediction value safely
+    try:
+        if hasattr(prediction, 'shape') and len(prediction.shape) > 0:
+            predicted_value = float(prediction[0])
+        else:
+            predicted_value = float(prediction)
+    except (IndexError, TypeError):
+        predicted_value = 0.5  # Default neutral value
 
     # Interpret the prediction (adjust based on your model's output)
     if predicted_value > 0.6:  # Threshold for weight increase
@@ -408,6 +416,9 @@ def format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_
 
     # Create suggested weights based on prediction
     suggested = []
+    t3 = int(target_reps.get("set_3", 0))
+    t4 = int(target_reps.get("set_4", 0))
+
     for i, s in enumerate(sets):
         if recommendation_type == "increase" and i >= 2:
             new_w = round(float(s["weight"]) + inc, 1)
@@ -416,8 +427,6 @@ def format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_
             new_w = float(s["weight"])
             action = "Maintain (ML)"
 
-        t3 = int(target_reps.get("set_3", 0))
-        t4 = int(target_reps.get("set_4", 0))
         target = t3 if i == 2 else (t4 if i == 3 else "-")
 
         suggested.append({
@@ -432,15 +441,19 @@ def format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_
     if workout_date:
         hour = workout_date.get("hour", 12)
         time_of_day = "morning" if hour < 12 else "afternoon" if hour < 18 else "evening"
-        date_info = f" (Prediction confidence: {predicted_value:.2f}, Time: {time_of_day})"
+        date_info = f" (Confidence: {predicted_value:.2f}, Time: {time_of_day})"
+
+    # Calculate hit targets
+    s3_reps = int(sets[2].get("reps", 0)) if len(sets) > 2 else 0
+    s4_reps = int(sets[3].get("reps", 0)) if len(sets) > 3 else 0
 
     return {
         "recommendation": recommendation_type,
         "message": message + date_info,
         "suggested_weights": suggested,
         "hit_targets": {
-            "set_3": int(sets[2].get("reps", 0)) >= int(target_reps.get("set_3", 0)),
-            "set_4": int(sets[3].get("reps", 0)) >= int(target_reps.get("set_4", 0))
+            "set_3": s3_reps >= t3 if t3 > 0 else False,
+            "set_4": s4_reps >= t4 if t4 > 0 else False
         },
         "health_warning": False,
         "workout_date": workout_date,
