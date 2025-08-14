@@ -219,6 +219,7 @@ def load_model() -> tuple:
 
     if os.path.exists(MODEL_FILE):
         try:
+            # Try pickle first
             with open(MODEL_FILE, "rb") as f:
                 model_data = pickle.load(f)
             model = model_data.get("model")
@@ -226,7 +227,18 @@ def load_model() -> tuple:
             scaler = model_data.get("scaler")
             scale_cols = list(model_data.get("cols_to_scale", []))
         except Exception as e:
-            st.warning(f"Model loading failed: {str(e)}")
+            # If pickle fails, try dill
+            try:
+                import dill
+                with open(MODEL_FILE, "rb") as f:
+                    model_data = dill.load(f)
+                model = model_data.get("model")
+                features = list(model_data.get("features", []))
+                scaler = model_data.get("scaler")
+                scale_cols = list(model_data.get("cols_to_scale", []))
+                st.info("✅ Model loaded successfully using dill format")
+            except Exception as dill_error:
+                st.warning(f"Model loading failed with both pickle and dill: {str(dill_error)}")
 
     return model, features, scaler, scale_cols
 
@@ -285,18 +297,176 @@ def rule_based_recommendation(
                 "health_warning": not is_healthy, "workout_date": workout_date}
 
 
+def make_ml_prediction(sets, target_reps, body_part, exercise_name, equipment_type, health_condition, workout_date):
+    """
+    Use the trained ML model to make weight recommendations
+    """
+    try:
+        # Prepare input features matching your model's expected format
+        input_data = prepare_model_input(sets, target_reps, body_part, exercise_name, equipment_type, health_condition,
+                                         workout_date)
+
+        # Make prediction using your trained model
+        if model_scaler and cols_to_scale:
+            # Scale the specified columns
+            input_scaled = input_data.copy()
+            input_scaled[cols_to_scale] = model_scaler.transform(input_data[cols_to_scale])
+            prediction = model.predict(input_scaled)
+        else:
+            prediction = model.predict(input_data)
+
+        # Convert prediction to recommendation format
+        return format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_name, workout_date)
+
+    except Exception as e:
+        st.error(f"ML prediction failed: {str(e)}")
+        raise e
+
+
+def prepare_model_input(sets, target_reps, body_part, exercise_name, equipment_type, health_condition, workout_date):
+    """
+    Prepare input features for the ML model based on all_columns
+    """
+    # Initialize all features with 0
+    input_features = {col: 0 for col in all_columns}
+
+    # Set target hit features
+    s3_reps = int(sets[2].get("reps", 0))
+    s4_reps = int(sets[3].get("reps", 0))
+    t3 = int(target_reps.get("set_3", 0))
+    t4 = int(target_reps.get("set_4", 0))
+
+    input_features['Set3_Hit_Target'] = 1 if (t3 > 0 and s3_reps >= t3) else 0
+    input_features['Set4_Hit_Target'] = 1 if (t4 > 0 and s4_reps >= t4) else 0
+
+    # Set date features
+    if workout_date:
+        input_features['month'] = workout_date.get('month', 1)
+        input_features['day'] = workout_date.get('day', 1)
+
+    # Calculate workout metrics
+    total_reps = sum(int(s.get("reps", 0)) for s in sets)
+    input_features['Avg_reps_workout'] = total_reps / 4 if total_reps > 0 else 0
+
+    # Calculate max weight and progress rate
+    weights = [float(s.get("weight", 0)) for s in sets]
+    max_weight = max(weights) if weights else 0
+    input_features['Max_weight_per_reps'] = max_weight
+
+    # Simple progress rate calculation (can be enhanced based on history)
+    input_features['progress_rate'] = 0.1  # Default, could be calculated from user history
+
+    # Health condition encoding
+    health_col = f'Health condition_{health_condition.title()}'
+    if health_col in input_features:
+        input_features[health_col] = 1
+    elif 'Health condition_Healthy' in input_features:
+        input_features['Health condition_Healthy'] = 1  # Default
+
+    # Body part encoding
+    body_part_col = f'Body_Part_{body_part}'
+    if body_part_col in input_features:
+        input_features[body_part_col] = 1
+
+    # Exercise encoding
+    exercise_col = f'Exercise_Name_{exercise_name}'
+    if exercise_col in input_features:
+        input_features[exercise_col] = 1
+
+    # Equipment encoding (if exists in model)
+    equipment_col = f'Equipment_Type_{equipment_type}'
+    if equipment_col in input_features:
+        input_features[equipment_col] = 1
+
+    # Calculate health by set weight (custom metric)
+    avg_weight = sum(weights) / len(weights) if weights else 0
+    health_multiplier = 1.0 if health_condition.lower() == "healthy" else 0.8
+    input_features['Health_by_setweight'] = avg_weight * health_multiplier
+
+    # Convert to DataFrame for model prediction
+    import pandas as pd
+    return pd.DataFrame([input_features])
+
+
+def format_ml_recommendation(prediction, sets, target_reps, body_part, exercise_name, workout_date):
+    """
+    Format ML model prediction into recommendation format
+    """
+    # Your model's prediction interpretation logic here
+    # This depends on what your model was trained to predict
+    predicted_value = prediction[0] if hasattr(prediction, '__getitem__') else prediction
+
+    # Interpret the prediction (adjust based on your model's output)
+    if predicted_value > 0.6:  # Threshold for weight increase
+        inc = 5.0 if body_part.lower() in ["chest", "back", "legs"] else 2.5
+        recommendation_type = "increase"
+        message = f"🤖 ML Model recommends: Increase by {inc}kg for {body_part}"
+    else:
+        inc = 0
+        recommendation_type = "maintain"
+        message = f"🤖 ML Model recommends: Maintain current weights for {body_part}"
+
+    # Create suggested weights based on prediction
+    suggested = []
+    for i, s in enumerate(sets):
+        if recommendation_type == "increase" and i >= 2:
+            new_w = round(float(s["weight"]) + inc, 1)
+            action = f"Increase by {inc}kg (ML)"
+        else:
+            new_w = float(s["weight"])
+            action = "Maintain (ML)"
+
+        t3 = int(target_reps.get("set_3", 0))
+        t4 = int(target_reps.get("set_4", 0))
+        target = t3 if i == 2 else (t4 if i == 3 else "-")
+
+        suggested.append({
+            "Set": i + 1,
+            "Weight (kg)": new_w,
+            "Reps": int(s["reps"]),
+            "Target Reps": target,
+            "Action": action
+        })
+
+    date_info = ""
+    if workout_date:
+        hour = workout_date.get("hour", 12)
+        time_of_day = "morning" if hour < 12 else "afternoon" if hour < 18 else "evening"
+        date_info = f" (Prediction confidence: {predicted_value:.2f}, Time: {time_of_day})"
+
+    return {
+        "recommendation": recommendation_type,
+        "message": message + date_info,
+        "suggested_weights": suggested,
+        "hit_targets": {
+            "set_3": int(sets[2].get("reps", 0)) >= int(target_reps.get("set_3", 0)),
+            "set_4": int(sets[3].get("reps", 0)) >= int(target_reps.get("set_4", 0))
+        },
+        "health_warning": False,
+        "workout_date": workout_date,
+        "ml_prediction": True,
+        "prediction_value": predicted_value
+    }
+
+
 def get_recommendation(sets, target_reps, body_part, exercise_name, equipment_type, health_condition,
                        workout_date=None):
     if exercise_name not in EXERCISES_BY_BODY_PART.get(body_part, []):
         st.error(f"Invalid exercise '{exercise_name}' for selected body part '{body_part}'!")
         st.info(f"Available exercises for {body_part}: {', '.join(EXERCISES_BY_BODY_PART.get(body_part, []))}")
         return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
-    if model is None:
-        return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
-    try:
-        return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
-    except Exception as e:
-        st.warning(f"Model failed: {str(e)}")
+
+    # Use ML model if available
+    if model is not None:
+        try:
+            st.info("🤖 Using your trained ML model for predictions!")
+            return make_ml_prediction(sets, target_reps, body_part, exercise_name, equipment_type, health_condition,
+                                      workout_date)
+        except Exception as e:
+            st.warning(f"ML model failed, falling back to rule-based: {str(e)}")
+            return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
+    else:
+        st.info("📋 Using rule-based recommendations (model not loaded)")
         return rule_based_recommendation(sets, target_reps, body_part, health_condition, workout_date)
 
 
