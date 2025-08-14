@@ -4,7 +4,7 @@ import numpy as np
 import os
 import json
 import hashlib
-import dill
+import pickle
 from datetime import datetime
 from typing import List, Dict, Any
 
@@ -220,7 +220,7 @@ def load_model() -> tuple:
     if os.path.exists(MODEL_FILE):
         try:
             with open(MODEL_FILE, "rb") as f:
-                model_data = dill.load(f)
+                model_data = pickle.load(f)
             model = model_data.get("model")
             features = list(model_data.get("features", []))
             scaler = model_data.get("scaler")
