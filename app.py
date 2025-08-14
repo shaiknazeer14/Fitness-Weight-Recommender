@@ -558,11 +558,6 @@ def show_recommendation_page():
             equipment = st.selectbox("Equipment", ["Dumbbell", "Barbell", "Machine", "Bodyweight"])
             health = st.selectbox("Health Status", ["Healthy", "Injured", "Recovering", "Other"])
 
-        with col2:
-            equipment = st.selectbox("Equipment", ["Dumbbell", "Barbell", "Machine", "Bodyweight"],
-                                     key="equipment_select")
-            health = st.selectbox("Health Status", ["Healthy", "Injured", "Recovering", "Other"], key="health_select")
-
         st.subheader("Workout Sets")
         sets = []
         for i in range(4):
